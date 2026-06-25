@@ -1,0 +1,66 @@
+name: "Standard theJournal Publication"
+description: >
+  General-purpose blog post for albertoduran.com/thejournal. Covers technical
+  tutorials, project write-ups, essays, tool evaluations, and opinion pieces.
+  The outline designer generates petition-specific follow-up questions after
+  this baseline configuration is resolved.
+
+config:
+  - field: tone
+    label: "Tone"
+    hint: "conversational / technical / formal / narrative"
+    default: "conversational"
+
+  - field: audience
+    label: "Target audience"
+    hint: "Who will read this and what they already know"
+    default: "developers and technical readers"
+
+  - field: scope
+    label: "Scope and emphasis"
+    hint: "Topics to prioritize, depth level, angles to take or avoid"
+    default: ""
+
+  - field: constraints
+    label: "Constraints and resources"
+    hint: "Length targets, links to cite, prior articles to reference, things to exclude"
+    default: ""
+
+# --------------------------------------------------------------------------
+# Optional per-agent fine-tuning. Every key is optional — omit a key (or the
+# whole `agents` block) and nothing is added to that agent's prompt. Use it to
+# nudge a single agent without rewriting its built-in instructions.
+#   <agent>.prompt      free-form text appended to that agent's system prompt
+#   outline.structure   a recommended section plan the outline designer follows
+# Supported agents: outline, writer, reviewer, humanizer.
+# --------------------------------------------------------------------------
+# agents:
+#   outline:
+#     prompt: |
+#       Favor short, skimmable sections with a concrete code example per topic.
+#     structure:
+#       - id: intro
+#         title: "Why this matters"
+#         description: "Set up the problem in plain language before any code."
+#   writer:
+#     prompt: |
+#       Open each section with a one-sentence takeaway before the detail.
+#   reviewer:
+#     prompt: |
+#       Reject any section that ships a code block without explaining it first.
+#   humanizer:
+#     prompt: |
+#       Keep sentences short. Prefer active voice and second person.
+
+# --------------------------------------------------------------------------
+# Optional frontmatter guidance — steers the metadata node when it designs the
+# title, description, and tags. Omit any key to fall back to generic guidance.
+# --------------------------------------------------------------------------
+frontmatter:
+  title: >
+    A specific, descriptive article title that names the actual topic. Never a section
+    heading or a generic phrase.
+  description: >
+    One plain sentence summarizing what the reader learns. Under 160 characters, no colons.
+  tags: >
+    2 to 5 lowercase kebab-case topic tags drawn from the subject matter.

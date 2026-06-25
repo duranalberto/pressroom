@@ -1,0 +1,368 @@
+name: "Stock Analysis"
+description: >
+  Stock analysis publication written in plain English.
+  Explains what the company does, breaks down the key metrics clearly,
+  walks through the valuation models, explains why the market price and the models
+  may disagree, lays out a two-sided outlook, and closes with a clear Buy / Hold /
+  Sell verdict, confidence level, and the specific risks it carries.
+
+# --------------------------------------------------------------------------
+# Publication goal — injected into the outline designer's system prompt.
+# This constrains the structure and purpose of every publication created
+# with this template. It is deliberately direction-agnostic: the same
+# template must serve a Buy, a Hold, and a Sell with equal honesty.
+# --------------------------------------------------------------------------
+goal: |
+  Create a stock analysis publication written in plain English, with every financial
+  metric explained when it first appears. The final goal is to judge whether the
+  company is a Buy, a Hold, or a Sell — taking the verdict directly from
+  analysis.json, never inventing or softening it.
+
+  The publication must:
+  - Follow the same order as the source report.md, extended for theJournal.
+  - Read and cite every data point from the input files (analysis.json,
+    valuation_data.json, news_data.json; report.md for narrative reference).
+    Never invent, estimate, or round beyond the source.
+  - Explain each financial metric in plain English the first time it appears,
+    using one simple analogy or real-world comparison.
+  - Walk the reader through the business, market position, financial performance,
+    cash generation, balance-sheet health, and valuation models — in that order.
+  - Compare the current stock price to the models' composite intrinsic value and
+    confidence range, then use recent items from news_data.json to explain WHY the
+    market may be pricing the stock BELOW, ABOVE, or IN LINE with that value —
+    in whichever direction the data actually points. Never assume undervaluation.
+  - Lay out a forward-looking outlook with BOTH a realistic positive path and a
+    realistic negative path, each grounded in the numbers and the news.
+  - Immediately after the opening paragraph (before the first ## section heading),
+    include the AI-generation disclaimer as a static `daisyui` callout fence
+    (variant note). It needs no import — the writer places the exact fenced block.
+  - Close with the verdict (Buy / Hold / Sell) and its stated confidence level,
+    the specific risks the investor accepts, who the stock suits, and entry-point
+    considerations.
+  - Tone is encouraging but honest. Do not downplay risks, and do not assume the
+    stock is a buy. Readers need balanced information, not a sales pitch.
+
+# --------------------------------------------------------------------------
+# Per-agent fine-tuning. Every key is optional — omit a key (or the whole
+# `agents` block) and nothing is added to that agent's prompt.
+#   <agent>.prompt      free-form instructions appended to the agent's system prompt
+#   outline.structure   the recommended section plan (formerly `outline_structure`)
+# Supported agents: outline, writer, reviewer, humanizer.
+# --------------------------------------------------------------------------
+agents:
+  outline:
+    prompt: |
+      This publication ships preconfigured visuals (see the PRECONFIGURED VISUALS list).
+      Place each one's artifact-slot fence in its named section, verbatim. Do not write
+      chart data or option objects yourself — the visuals are rendered deterministically
+      from the input files.
+
+      The verdict, the valuation direction (undervalued / overvalued / fairly valued), and
+      every number come from the data, not from assumptions about the company. The same
+      structure must work whether the stock is a Buy, a Hold, or a Sell.
+
+    # Recommended section structure — the outline designer follows this order.
+    structure:
+      - id: company-overview
+        title: "What Does This Company Actually Do?"
+        description: >
+          Plain-English company overview from valuation_data.json (the profile block).
+          What product or service does it sell? Who are its customers (businesses,
+          consumers, governments)? What sector and industry does it operate in, and why
+          does it matter? Keep it jargon-free; assume the reader has never heard of the
+          company.
+
+      - id: market-snapshot
+        title: "Where the Stock Stands Right Now"
+        description: >
+          From market_data: current price, 52-week high and low and the distance from
+          each, 50-day and 200-day moving averages and what trading above or below them
+          signals, beta (volatility relative to the market), the P/E ratio, and average
+          volume. Explain each metric in one sentence. Use the numbers exactly. Read the
+          trend from the data — do not assume it is rising or falling.
+
+      - id: financial-performance
+        title: "How the Company Is Performing"
+        description: >
+          From financials: revenue, gross margin, operating margin, net margin, EPS,
+          revenue growth and net income growth (YoY). For each: what it measures, what the
+          number is, and whether it is strong or concerning judged from the value itself.
+          Note the relationship between revenue growth and net-income growth whichever way
+          it points (faster net-income growth is efficiency; slower can be margin pressure).
+
+      - id: cash-flow
+        title: "Does It Generate Real Cash?"
+        description: >
+          From cash_flow: operating cash flow, capital expenditure, free cash flow and why
+          FCF matters more than reported earnings, the FCF conversion ratio, dividends, and
+          share buybacks. Buybacks are stored as a negative number (a cash outflow) — present
+          the magnitude, never the minus sign. Explain what the dividend and buyback policy
+          signals to investors.
+
+      - id: balance-sheet
+        title: "Is the Company Financially Healthy?"
+        description: >
+          From balance_sheet: total assets, liabilities, and equity, total debt, cash
+          position, current ratio, debt-to-equity, and goodwill plus intangibles as a
+          percentage of assets and what that means. Say whether leverage and liquidity look
+          healthy or stretched, judged from the numbers — do not assume either way.
+
+      - id: valuation-models
+        title: "What the Models Say It Is Worth"
+        description: >
+          From valuations and summary: the composite intrinsic value, the implied upside
+          (state its direction explicitly), the confidence range, and the model agreement
+          score (explain that a low score means the figure is a rough estimate, not a target).
+          Explain each model that ACTUALLY ran (DCF, P/E, ROE, EV/EBITDA, P/S, NAV) in one
+          plain-English sentence and what its scenarios show. If a model was skipped, do not
+          discuss it. The visual compares the current price to the composite fair value and
+          the confidence range.
+
+      - id: strengths-risks-catalysts
+        title: "Reasons to Be Optimistic and Reasons to Be Careful"
+        description: >
+          From analysis.json: the strengths, risks, and catalysts lists, each with its
+          specific number or context. Present both sides with equal weight. The reader must
+          leave this section understanding what could go right and what could go wrong.
+
+      - id: valuation-gap
+        title: "Why the Price and the Models Disagree"
+        description: >
+          Compare the current price to the composite intrinsic value and the confidence
+          range from summary. State plainly whether the stock trades BELOW fair value
+          (potentially undervalued), ABOVE it (potentially overvalued), or WITHIN the range
+          (roughly fair). Note whether the current price sits inside or outside the
+          confidence range and what that implies. Then use recent items from news_data.json
+          to explain WHY the market may be pricing it this way — sentiment, sector moves,
+          analyst actions, company events. Give both the bullish and the bearish reading of
+          the gap. This section exists to explain an incongruency between price and value in
+          whichever direction it runs.
+
+      - id: outlook
+        title: "What Could Happen Next"
+        description: >
+          A forward-looking view grounded ONLY in the numbers and news_data.json. Lay out a
+          realistic positive path (catalysts, momentum, upside drivers) and a realistic
+          negative path (risks, headwinds, what would have to go wrong). Tie each scenario to
+          specific data points or news items, attributing news to its source where useful.
+          Do not predict a single outcome — give the reader both sides.
+
+      - id: verdict
+        title: "Should You Buy This Stock?"
+        description: >
+          Present the verdict from analysis.json — Buy, Sell, or Hold — as what the data
+          suggests, not as a certainty. If the recommendation is Buy, frame it as "this looks
+          like a buy" or "the analysis points toward a buy," never as a definitive instruction.
+          Do NOT state a single numeric "risk level" (Low / Moderate / High) — analysis.json
+          does not provide one. Use `###` subsections in this order: (1) What the data suggests
+          — the verdict and confidence level framed as a signal, not a guarantee; (2) Risks of
+          buying — if the recommendation is Buy, enumerate the specific risks the investor
+          accepts by acting on that signal, drawn from analysis.json strengths/risks and the
+          news_data.json context; (3) Who this suits — investor profile (value, growth, income;
+          risk tolerance); (4) Entry-point considerations — support levels and moving-average
+          context from market_data. End with a one-line disclaimer that this is not financial
+          advice.
+
+  writer:
+    prompt: |
+      This stock analysis must work equally well for a Buy, a Hold, or a Sell. Write in
+      plain English — every metric explained when it first appears, every claim grounded in
+      the data. Beyond the base rules:
+      - Explain every financial metric in plain English the first time it appears; one short
+        analogy or real-world comparison is enough.
+      - Use only numbers that appear in the input files. Never invent, estimate, or round
+        beyond the source. If a value is not in the inputs, do not state it.
+      - Attribute every figure to the correct metric by name. Revenue growth, net income
+        growth, and EPS growth are different numbers — never swap or relabel them.
+      - Take the verdict (Buy / Sell / Hold) and confidence level directly from analysis.json —
+        never change or invent them. Present a Buy as what the data suggests, not as a
+        certainty: use "this looks like a buy," "the analysis points toward a buy," or similar
+        hedged framing. Never write "this is a buy" or "you should buy" as a flat statement.
+        If the verdict is Buy, immediately follow the verdict statement with the specific risks
+        the investor accepts by acting on that signal — do not let a Buy recommendation stand
+        without its accompanying risk picture. Do NOT state a risk level (Low / Moderate /
+        High) — analysis.json provides only `recommendation` and `confidence`; inventing a
+        risk level is a factual error.
+      - Read the valuation direction from the data: the sign of the implied upside, the
+        composite assessment in summary.note, and whether the current price is below, inside,
+        or above the confidence range. Never assume the stock is undervalued or a bargain.
+      - Do not import company-specific assumptions (e.g. that a negative NAV is "normal", or
+        that any single metric is automatically good or bad). Judge each number from its value
+        and its context in this company's data.
+      - Share buybacks are stored as a negative number (a cash outflow). Present the magnitude,
+        e.g. "$37.21B in buybacks", never "-$37.21B in buybacks".
+      - In the "Why the Price and the Models Disagree" and "What Could Happen Next" sections,
+        ground the explanation and the outlook in specific items from news_data.json. Reference
+        the publisher or date where it helps credibility. Never invent a headline or an event.
+      - Keep the tone encouraging but honest. Present risks at full strength, never as a pitch.
+      - Include a short note on what type of investor this stock suits.
+      - Place the AI-generation disclaimer immediately after the opening paragraph, before
+        the first ## section heading, as a static `daisyui` callout fence, with no import
+        and no JSX. Emit this exact fenced block verbatim, starting at the left margin:
+
+      ```daisyui
+      {
+        "component": "callout",
+        "variant": "note",
+        "content": [
+          { "type": "paragraph", "text": "This publication was generated by AI following a deterministic analysis produced by the Equity Valuation Engine. It is not an investor recommendation." },
+          { "type": "link", "href": "https://albertoduran.com/projects/equity-valuation-engine/", "label": "Equity Valuation Engine" }
+        ]
+      }
+      ```
+
+  reviewer:
+    prompt: |
+      This is a plain-English stock analysis. Treat these as blocking issues in addition to
+      the base criteria:
+      - A financial metric used without a plain-English explanation on first use.
+      - The AI-generation disclaimer callout fence (```daisyui) is missing from after the
+        opening paragraph.
+      - Any number that does not appear in the input files (treat as an uncited/invented claim).
+      - A figure attributed to the wrong metric (e.g. revenue growth and net income growth
+        swapped, or net income growth relabeled as EPS growth).
+      - A verdict or confidence level that does not match analysis.json, OR a stated "risk
+        level" (Low / Moderate / High) — analysis.json provides none, so any risk level is invented.
+      - A valuation direction that contradicts the data: calling the stock undervalued when the
+        implied upside is negative or summary.note says overvalued (or vice versa), or claiming
+        upside that the numbers do not support.
+      - A "Why the Price and the Models Disagree" section that fails to compare the current price
+        to the composite intrinsic value / confidence range, or that does not use news_data.json
+        to explain the gap.
+      - A "What Could Happen Next" section that gives only one side (only bullish or only bearish).
+      - Company-specific assumptions stated as fact without support in the data.
+      - Risks that are downplayed, omitted, or outweighed by promotional language.
+      - A missing investor-profile note.
+      - A Buy verdict stated as a certainty ("this is a buy," "you should buy") rather than
+        as what the data suggests ("this looks like a buy," "the analysis points toward a buy").
+      - A Buy verdict not followed by an explicit enumeration of the risks the investor accepts
+        by acting on that signal.
+
+  humanizer:
+    prompt: |
+      This is a stock analysis. While removing AI patterns, preserve exactly:
+      - Every numeric value, ticker, percentage, and metric name (revenue, FCF, P/E, etc.),
+        and the metric each number is attached to (never reattach a number to a different metric).
+      - The valuation direction (undervalued / overvalued / fairly valued). Never flip it or
+        make the gap sound more favorable than the numbers state.
+      - All risk, uncertainty, and hedging language. Never make a claim sound more confident.
+      - The verdict and its stated confidence level. Do not introduce a "risk level".
+      - All hedging language around the verdict ("looks like," "points toward," "the analysis
+        suggests"). Never strengthen a Buy signal — do not rewrite hedged framing into a flat
+        instruction or a confident assertion.
+      - The disclaimer callout fence (```daisyui) after the opening paragraph. Do not
+        remove, paraphrase, or move it.
+      Keep the voice encouraging but honest, never promotional.
+
+# --------------------------------------------------------------------------
+# Preconfigured visuals — references to visual templates in templates/visuals/.
+# The outline places each fence in its `section`; the visualizer resolves the
+# `bind` paths deterministically (no LLM in the data path) and fills the template.
+#   id        unique artifact id (also the kebab id used in the body)
+#   template  visual-template id under templates/visuals/
+#   section   structure section id where the visual belongs
+#   params    typed params passed to the template
+#   bind      extract-slot -> "file:json.path" (or "file:[p1, p2, ...]")
+#
+# Every bind below uses fields that exist for EVERY company in the data contract,
+# so each visual renders regardless of which valuation models ran. (The previous
+# per-model grouped-bar hardcoded all six models and silently vanished for any
+# company that skipped one — e.g. PS for COST/NKE, DCF/PE/ROE for MSTR.)
+# --------------------------------------------------------------------------
+visuals:
+  - id: price-3m
+    template: price-line
+    section: market-snapshot
+    params:
+      title: "Closing price, last 3 months"
+      name: "Close"
+      preset: currency
+    bind:
+      series: "valuation_data.json:historical_data.price_history?last=63"
+
+  - id: revenue-annual
+    template: category-bar
+    section: financial-performance
+    params:
+      title: "Annual revenue ($ billions)"
+      name: "Revenue ($B)"
+      # The values are the most recent full fiscal years (oldest -> newest). The source has
+      # no fiscal-year strings, so labels are honest-but-relative; the last is the latest
+      # FULL year, not TTM. (Best fix: emit a fiscal-year array upstream.)
+      categories: ["3 yrs ago", "2 yrs ago", "1 yr ago", "Latest FY"]
+      horizontal: false
+      preset: currency
+    bind:
+      values: "valuation_data.json:stock_metrics.financials.history.revenue_annual"
+    transform:
+      # Dollars -> billions, one decimal, so the axis reads "31.4" not "31352000000".
+      values: { scale: 1.0e-9, round: 1 }
+
+  - id: valuation-by-model
+    template: grouped-bar
+    section: valuation-models
+    params:
+      title: "What each model says a share is worth (bear, base, bull)"
+      caption: "Each model values the company a different way; wide spread means low agreement."
+      name_a: "Bear"
+      name_b: "Base"
+      name_c: "Bull"
+      preset: currency
+    # Projection binds: pull one value per model that ACTUALLY ran, straight from
+    # summary.rows, so the chart adapts whether 3 or 6 models were run (no skipped-model
+    # crash). The three scenario series and the category labels stay aligned by list order.
+    bind:
+      series_a: "valuation_data.json:summary.rows[scenario=Bear].intrinsic_value"
+      series_b: "valuation_data.json:summary.rows[scenario=Base].intrinsic_value"
+      series_c: "valuation_data.json:summary.rows[scenario=Bull].intrinsic_value"
+      categories: "valuation_data.json:summary.rows[scenario=Base].model_name"
+
+  - id: value-vs-price
+    template: category-bar
+    section: valuation-gap
+    params:
+      title: "What the models say a share is worth, next to today's price"
+      name: "Per share ($)"
+      # Current price vs the composite fair value vs the low/high of the confidence range.
+      # These four fields exist for every company, so this chart never degrades on model skips.
+      categories: ["Current price", "Fair value (composite)", "Worst case", "Best case"]
+      horizontal: true
+      preset: currency
+    bind:
+      values: "valuation_data.json:[stock_metrics.market_data.current_price, summary.composite_intrinsic, summary.confidence_band[0], summary.confidence_band[1]]"
+
+# --------------------------------------------------------------------------
+# Configuration fields — resolved before the outline designer runs.
+# Fields with a non-empty default are applied silently.
+# Fields without a default prompt the user before the pipeline starts.
+# --------------------------------------------------------------------------
+config:
+  - field: tone
+    label: "Tone"
+    hint: "conversational / educational / formal / narrative"
+    default: "conversational and educational"
+
+  - field: audience
+    label: "Target audience"
+    hint: "Who will read this and their investing experience level"
+    default: "investors who want a clear, plain-English breakdown of the analysis"
+
+  - field: constraints
+    label: "Constraints and notes"
+    hint: "Anything to exclude, emphasize, or be aware of"
+    default: "cite only numbers from the input files; do not invent or estimate any data"
+
+# --------------------------------------------------------------------------
+# Optional frontmatter guidance — steers the metadata node's title/description/tags.
+# --------------------------------------------------------------------------
+frontmatter:
+  title: >
+    Name the company and signal an investment analysis, e.g. "Is Salesforce a Buy?".
+    Use the company name, never a copied section heading. Avoid "deep dive" in the title.
+  description: >
+    One sentence naming the company and summarizing the valuation gap, key risks,
+    and verdict. Under 160 characters, no colons. Do not start with a style label;
+    summarize the substance directly.
+  tags: >
+    Include the ticker, the company name, "stock-analysis", and the sector. Lowercase
+    kebab-case, 2 to 5 tags.

@@ -1,0 +1,34 @@
+# Visual template — single-series bar comparing one value across labeled categories.
+id: category-bar
+kind: echart
+type: barChartOption
+summary: >
+  Single-series bar chart comparing one value across up to ~12 labeled categories.
+  Pick this for "value per category" comparisons (revenue per year, value per model).
+
+params:
+  title:       { required: true, desc: "Figure title above the chart" }
+  description: { desc: "Accessible chart summary; the echart renderer defaults it to the title when omitted" }
+  name:        { default: "Value", desc: "Series name" }
+  categories:  { required: true, type: "string[]", desc: "x-axis labels, one per value" }
+  horizontal:  { default: true, type: "bool", desc: "horizontal bars for long labels / rankings" }
+  preset:      { default: "currency", enum: ["currency", "percent"], desc: "client formatter" }
+
+extract:
+  values: { type: "number[]", desc: "one value per category, in the same order as categories" }
+
+labels:
+  x: { from: param, name: categories }   # author supplies the literal category labels
+
+imports: []
+
+render: |
+  ```echart
+  {
+    "type": "bar",
+    "figure": { "title": @@param:title@@, "description": @@param:description@@ },
+    "size": { "width": 760, "height": 400 },
+    "optionClientPreset": @@param:preset@@,
+    "data": { "name": @@param:name@@, "horizontal": @@param:horizontal@@, "x": @@label:x@@, "y": @@data:values@@ }
+  }
+  ```

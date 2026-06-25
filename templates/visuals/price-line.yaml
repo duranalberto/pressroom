@@ -1,0 +1,36 @@
+# Visual template — line chart of a numeric series over ordered points.
+# Tokens are placed BARE; the renderer substitutes each with a full JS/JSON literal,
+# so no LLM ever positions a token or balances a brace.
+id: price-line
+kind: echart                 # routes to the echart specialized renderer (by lookup, not keyword guess)
+type: lineChartOption
+summary: >
+  Trend of a single numeric series over ordered points (recent prices, a time series).
+  Pick this when the editorial point is "how this value moved over time".
+
+params:
+  title:       { required: true,  desc: "Figure title above the chart" }
+  description: { desc: "Accessible chart summary; the echart renderer defaults it to the title when omitted" }
+  name:        { default: "Value", desc: "Series name shown in the legend/tooltip" }
+  preset:      { default: "currency", enum: ["currency", "percent"], desc: "client formatter" }
+
+extract:
+  series: { type: "number[]", desc: "the y values, ordered oldest -> newest" }
+
+labels:
+  # Label only the endpoints (the series has no real date axis). "Oldest → Latest" reads
+  # cleanly; the title carries the time window. Avoids a row of meaningless D-62…D-0 ticks.
+  x: { from: window, of: series, start: "Oldest", end: "Latest" }
+
+imports: []
+
+render: |
+  ```echart
+  {
+    "type": "area",
+    "figure": { "title": @@param:title@@, "description": @@param:description@@ },
+    "size": { "width": 760, "height": 360 },
+    "optionClientPreset": @@param:preset@@,
+    "data": { "name": @@param:name@@, "x": @@label:x@@, "y": @@data:series@@ }
+  }
+  ```

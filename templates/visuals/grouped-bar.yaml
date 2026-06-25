@@ -1,0 +1,58 @@
+# Visual template — grouped (multi-series) bars over shared categories.
+# Uses a RAW ECharts option object (not a builder) because the single-series builders
+# cannot express multiple series. Templates make a raw option safe: the option shape is
+# written correctly once here, and only the data/labels are injected deterministically.
+id: grouped-bar
+kind: echart
+type: raw
+summary: >
+  Grouped bars comparing three series (e.g. Bear / Base / Bull scenarios) across the same
+  categories. Pick this when one bar per category is not enough.
+
+params:
+  title:       { required: true, desc: "Figure title above the chart" }
+  description: { desc: "Accessible chart summary; the echart renderer defaults it to the title when omitted" }
+  caption:     { default: "", desc: "supporting caption below the chart" }
+  name_a:      { default: "Series A", desc: "name of the first series" }
+  name_b:      { default: "Series B", desc: "name of the second series" }
+  name_c:      { default: "Series C", desc: "name of the third series" }
+  preset:      { default: "currency", enum: ["currency", "percent"], desc: "client formatter" }
+
+extract:
+  series_a: { type: "number[]", desc: "first series, one value per category" }
+  series_b: { type: "number[]", desc: "second series, one value per category" }
+  series_c: { type: "number[]", desc: "third series, one value per category" }
+  # Category labels come from the data (not a static param) so the chart adapts to a
+  # variable-length set, e.g. only the valuation models that actually ran.
+  categories: { type: "string[]", desc: "one label per group, same order as the series" }
+
+labels:
+  y: { from: data, of: categories }
+
+imports: []
+
+# Horizontal layout: category labels sit on the LEFT (y-axis), so they never collide with
+# the top legend, and long category sets read top-to-bottom. `containLabel` reserves room
+# for the labels; `legend.top` pins the key above the plot. A raw ECharts `option` object
+# expresses the three grouped series that the single-series presets cannot.
+render: |
+  ```echart
+  {
+    "type": "option",
+    "figure": { "title": @@param:title@@, "caption": @@param:caption@@, "description": @@param:description@@ },
+    "size": { "width": 760, "height": 460 },
+    "optionClientPreset": @@param:preset@@,
+    "option": {
+      "tooltip": { "trigger": "axis" },
+      "legend": { "data": [@@param:name_a@@, @@param:name_b@@, @@param:name_c@@], "top": 0 },
+      "grid": { "left": 8, "right": 24, "top": 40, "bottom": 8, "containLabel": true },
+      "xAxis": { "type": "value" },
+      "yAxis": { "type": "category", "data": @@label:y@@ },
+      "series": [
+        { "name": @@param:name_a@@, "type": "bar", "data": @@data:series_a@@ },
+        { "name": @@param:name_b@@, "type": "bar", "data": @@data:series_b@@ },
+        { "name": @@param:name_c@@, "type": "bar", "data": @@data:series_c@@ }
+      ]
+    }
+  }
+  ```

@@ -1,0 +1,39 @@
+# Visual template — a Callout box surfacing a verdict (recommendation + confidence).
+id: verdict-callout
+kind: ui
+type: Callout
+summary: >
+  Highlighted callout box stating a verdict and its confidence. Pick this to make a
+  recommendation impossible to miss while scanning.
+
+params:
+  variant: { default: "information", enum: ["note", "information", "warning", "caution", "error"] }
+  title:   { default: "The Verdict", desc: "Callout heading" }
+
+extract:
+  recommendation: { type: "string", desc: "the verdict, e.g. Buy / Hold / Sell" }
+  confidence:     { type: "string", desc: "confidence level, e.g. High / Medium / Low" }
+
+# The callout colour follows the verdict deterministically: a Buy reads as positive
+# information, a Hold as a neutral note, a Sell as a caution. An explicit `variant` param
+# on the fence or in the publication template still wins over this default mapping.
+derive:
+  variant:
+    from: recommendation
+    map:
+      Buy: information
+      Hold: note
+      Sell: caution
+    default: information
+
+imports: []
+
+render: |
+  ```daisyui
+  {
+    "component": "callout",
+    "variant": @@param:variant@@,
+    "title": @@param:title@@,
+    "content": "Recommendation: @@str:recommendation@@ · Confidence: @@str:confidence@@"
+  }
+  ```

@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+*.egg-info/
+*.egg
+dist/
+build/
+.eggs/
+
+# Virtual environment
+venv/
+.venv/
+env/
+.env/
+
+# Environment variables
+.env
+
+# Output publications (generated files — don't commit)
+output/
+# Audit run-id counter (per-checkout, never committed)
+.run_id
+# Input files (user content — don't commit)
+input/**
+!input/.gitkeep
+
+# macOS
+.DS_Store
+
+# Editor
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# LangGraph / LangSmith
+.langgraph_api/
+
+# References (local research, notes, source material — never committed)
+references/
+
+# Misc
+*.log
+
+# Agents
+.claude/
